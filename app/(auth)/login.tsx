@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,30 +8,33 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
+import { loginSchema, ILoginForm } from '@/utils/validationUtils';
+import toast from '@/utils/toast';
+import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const LoginScreen = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-    setLoading(true);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ILoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
+
+  const onSubmit = async (data: ILoginForm) => {
     try {
-      await login(email.trim(), password);
+      await login(data.email, data.password);
       router.replace('/(tabs)' as any);
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message || 'Invalid credentials');
-    } finally {
-      setLoading(false);
+      toast.error(error.message || 'Invalid credentials', { title: 'Login Failed' });
     }
   };
 
@@ -50,30 +53,55 @@ const LoginScreen = () => {
 
         {/* Form */}
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#666"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextInput
+                  style={[styles.input, errors.email && styles.inputError]}
+                  placeholder="Email"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+                {errors.email && (
+                  <Text style={styles.errorText}>{errors.email.message}</Text>
+                )}
+              </View>
+            )}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#666"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
+
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextInput
+                  style={[styles.input, errors.password && styles.inputError]}
+                  placeholder="Password"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  secureTextEntry
+                />
+                {errors.password && (
+                  <Text style={styles.errorText}>{errors.password.message}</Text>
+                )}
+              </View>
+            )}
           />
 
           <TouchableOpacity
             style={styles.loginBtn}
-            onPress={handleLogin}
-            disabled={loading}
+            onPress={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
           >
-            {loading ? (
+            {isSubmitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.loginBtnText}>Login</Text>
@@ -83,7 +111,7 @@ const LoginScreen = () => {
 
         {/* Signup link */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don&rsquo;t have an account? </Text>
+          <Text style={styles.footerText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/signup' as any)}>
             <Text style={styles.signupLink}>Sign Up</Text>
           </TouchableOpacity>
@@ -103,63 +131,72 @@ const styles = StyleSheet.create({
   inner: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 30,
+    paddingHorizontal: wp(7.5),
   },
   header: {
     alignItems: 'center',
-    marginBottom: 50,
+    marginBottom: hp(6.25),
   },
   logo: {
-    fontSize: 60,
-    marginBottom: 10,
+    fontSize: responsiveFontSize(60),
+    marginBottom: hp(1.25),
   },
   appName: {
-    fontSize: 32,
+    fontSize: responsiveFontSize(32),
     fontWeight: 'bold',
     color: '#fff',
     letterSpacing: 1,
   },
   tagline: {
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     color: '#999',
-    marginTop: 6,
+    marginTop: hp(0.75),
   },
   form: {
-    gap: 16,
+    gap: hp(2),
   },
   input: {
     backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: wp(3),
+    padding: wp(4),
     color: '#fff',
-    fontSize: 15,
+    fontSize: responsiveFontSize(15),
     borderWidth: 1,
     borderColor: '#333',
   },
+  inputError: {
+    borderColor: '#F44336',
+  },
+  errorText: {
+    color: '#F44336',
+    fontSize: responsiveFontSize(12),
+    marginTop: hp(0.5),
+    marginLeft: wp(1),
+  },
   loginBtn: {
     backgroundColor: '#E91E8C',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: wp(3),
+    padding: wp(4),
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: hp(1),
   },
   loginBtnText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: responsiveFontSize(16),
     fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 30,
+    marginTop: hp(3.75),
   },
   footerText: {
     color: '#999',
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
   },
   signupLink: {
     color: '#E91E8C',
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     fontWeight: 'bold',
   },
 });

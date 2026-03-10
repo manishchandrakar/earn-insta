@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,46 +8,34 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
+import { signupSchema, ISignupForm } from '@/utils/validationUtils';
+import toast from '@/utils/toast';
+import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const SignupScreen = () => {
   const { signup } = useAuth();
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleSignup = async () => {
-    if (!email.trim() || !username.trim() || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
-      return;
-    }
-    if (username.length < 3) {
-      Alert.alert('Error', 'Username must be at least 3 characters');
-      return;
-    }
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ISignupForm>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: { email: '', username: '', password: '', confirmPassword: '' },
+  });
 
-    setLoading(true);
+  const onSubmit = async (data: ISignupForm) => {
     try {
-      await signup(email.trim(), username.trim(), password);
+      await signup(data.email, data.username, data.password);
       router.replace('/(tabs)' as any);
     } catch (error: any) {
-      Alert.alert('Signup Failed', error.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
+      toast.error(error.message || 'Something went wrong', { title: 'Signup Failed' });
     }
   };
 
@@ -66,46 +54,97 @@ const SignupScreen = () => {
 
         {/* Form */}
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#666"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextInput
+                  style={[styles.input, errors.email && styles.inputError]}
+                  placeholder="Email"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+                {errors.email && (
+                  <Text style={styles.errorText}>{errors.email.message}</Text>
+                )}
+              </View>
+            )}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            placeholderTextColor="#666"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
+
+          <Controller
+            control={control}
+            name="username"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextInput
+                  style={[styles.input, errors.username && styles.inputError]}
+                  placeholder="Username"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  autoCapitalize="none"
+                />
+                {errors.username && (
+                  <Text style={styles.errorText}>{errors.username.message}</Text>
+                )}
+              </View>
+            )}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#666"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
+
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextInput
+                  style={[styles.input, errors.password && styles.inputError]}
+                  placeholder="Password"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  secureTextEntry
+                />
+                {errors.password && (
+                  <Text style={styles.errorText}>{errors.password.message}</Text>
+                )}
+              </View>
+            )}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            placeholderTextColor="#666"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
+
+          <Controller
+            control={control}
+            name="confirmPassword"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextInput
+                  style={[styles.input, errors.confirmPassword && styles.inputError]}
+                  placeholder="Confirm Password"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  secureTextEntry
+                />
+                {errors.confirmPassword && (
+                  <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
+                )}
+              </View>
+            )}
           />
 
           <TouchableOpacity
             style={styles.signupBtn}
-            onPress={handleSignup}
-            disabled={loading}
+            onPress={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
           >
-            {loading ? (
+            {isSubmitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.signupBtnText}>Create Account</Text>
@@ -135,64 +174,73 @@ const styles = StyleSheet.create({
   inner: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 30,
-    paddingVertical: 50,
+    paddingHorizontal: wp(7.5),
+    paddingVertical: hp(6.25),
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: hp(5),
   },
   logo: {
-    fontSize: 60,
-    marginBottom: 10,
+    fontSize: responsiveFontSize(60),
+    marginBottom: hp(1.25),
   },
   appName: {
-    fontSize: 32,
+    fontSize: responsiveFontSize(32),
     fontWeight: 'bold',
     color: '#fff',
     letterSpacing: 1,
   },
   tagline: {
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     color: '#999',
-    marginTop: 6,
+    marginTop: hp(0.75),
   },
   form: {
-    gap: 16,
+    gap: hp(2),
   },
   input: {
     backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: wp(3),
+    padding: wp(4),
     color: '#fff',
-    fontSize: 15,
+    fontSize: responsiveFontSize(15),
     borderWidth: 1,
     borderColor: '#333',
   },
+  inputError: {
+    borderColor: '#F44336',
+  },
+  errorText: {
+    color: '#F44336',
+    fontSize: responsiveFontSize(12),
+    marginTop: hp(0.5),
+    marginLeft: wp(1),
+  },
   signupBtn: {
     backgroundColor: '#E91E8C',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: wp(3),
+    padding: wp(4),
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: hp(1),
   },
   signupBtnText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: responsiveFontSize(16),
     fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 30,
+    marginTop: hp(3.75),
   },
   footerText: {
     color: '#999',
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
   },
   loginLink: {
     color: '#E91E8C',
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     fontWeight: 'bold',
   },
 });

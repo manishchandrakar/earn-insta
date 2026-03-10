@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  TextInput, ActivityIndicator, Alert, ScrollView,
+  TextInput, ActivityIndicator, ScrollView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,8 @@ import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from '
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
+import toast from '@/utils/toast';
+import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const UploadScreen = () => {
   const { user, userProfile } = useAuth();
@@ -20,7 +22,7 @@ const UploadScreen = () => {
   const pickVideo = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow media library access');
+      toast.error('Please allow media library access', { title: 'Permission needed' });
       return;
     }
 
@@ -37,11 +39,11 @@ const UploadScreen = () => {
 
   const handleUpload = async () => {
     if (!videoUri) {
-      Alert.alert('No video', 'Please select a video first');
+      toast.error('Please select a video first');
       return;
     }
     if (!caption.trim()) {
-      Alert.alert('Caption needed', 'Please add a caption');
+      toast.error('Please add a caption');
       return;
     }
     if (!user) return;
@@ -50,14 +52,12 @@ const UploadScreen = () => {
     setProgress(0);
 
     try {
-      // Get Firebase auth token
       const token = await user.getIdToken();
       const filenamePath = `reels/${user.uid}/${Date.now()}.mp4`;
       const filenameEncoded = encodeURIComponent(filenamePath);
       const bucket = 'earn-insta.firebasestorage.app';
       const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${filenameEncoded}`;
 
-      // Read file as base64 then upload via XHR with progress
       const response = await fetch(videoUri);
       const blob = await response.blob();
 
@@ -82,7 +82,6 @@ const UploadScreen = () => {
       const downloadToken = responseData.downloadTokens;
       const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${filenameEncoded}?alt=media&token=${downloadToken}`;
 
-      // Save reel to Firestore
       await addDoc(collection(db, 'reels'), {
         videoUrl: downloadURL,
         caption: caption.trim(),
@@ -96,7 +95,6 @@ const UploadScreen = () => {
         createdAt: serverTimestamp(),
       });
 
-      // Update user reel count
       await updateDoc(doc(db, 'users', user.uid), {
         reelsCount: increment(1),
       });
@@ -104,12 +102,11 @@ const UploadScreen = () => {
       setUploading(false);
       setVideoUri(null);
       setCaption('');
-      Alert.alert('Success!', 'Your reel has been uploaded!', [
-        { text: 'View Feed', onPress: () => router.replace('/(tabs)') },
-      ]);
+      toast.success('Your reel has been uploaded!', { title: 'Posted!' });
+      setTimeout(() => router.replace('/(tabs)'), 1500);
     } catch (error: any) {
       console.error('Upload error:', error);
-      Alert.alert('Error', error.message);
+      toast.error(error.message, { title: 'Upload failed' });
       setUploading(false);
     }
   };
@@ -118,24 +115,22 @@ const UploadScreen = () => {
     <ScrollView style={styles.container} contentContainerStyle={styles.inner}>
       <Text style={styles.title}>Upload Reel</Text>
 
-      {/* Video picker */}
       <TouchableOpacity style={styles.videoPicker} onPress={pickVideo}>
         {videoUri ? (
           <View style={styles.videoSelected}>
-            <Ionicons name="checkmark-circle" size={40} color="#E91E8C" />
+            <Ionicons name="checkmark-circle" size={wp(10)} color="#E91E8C" />
             <Text style={styles.videoSelectedText}>Video Selected</Text>
             <Text style={styles.changeText}>Tap to change</Text>
           </View>
         ) : (
           <View style={styles.videoPlaceholder}>
-            <Ionicons name="cloud-upload-outline" size={50} color="#555" />
+            <Ionicons name="cloud-upload-outline" size={wp(12.5)} color="#555" />
             <Text style={styles.videoPlaceholderText}>Tap to select video</Text>
             <Text style={styles.videoSubText}>MP4, MOV up to 500MB</Text>
           </View>
         )}
       </TouchableOpacity>
 
-      {/* Caption */}
       <View style={styles.captionContainer}>
         <TextInput
           style={styles.captionInput}
@@ -149,7 +144,6 @@ const UploadScreen = () => {
         <Text style={styles.charCount}>{caption.length}/200</Text>
       </View>
 
-      {/* Upload progress */}
       {uploading && (
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
@@ -159,7 +153,6 @@ const UploadScreen = () => {
         </View>
       )}
 
-      {/* Upload button */}
       <TouchableOpacity
         style={[styles.uploadBtn, (!videoUri || uploading) && styles.uploadBtnDisabled]}
         onPress={handleUpload}
@@ -169,7 +162,7 @@ const UploadScreen = () => {
           <ActivityIndicator color="#fff" />
         ) : (
           <>
-            <Ionicons name="cloud-upload" size={20} color="#fff" />
+            <Ionicons name="cloud-upload" size={wp(5)} color="#fff" />
             <Text style={styles.uploadBtnText}>Post Reel</Text>
           </>
         )}
@@ -182,35 +175,35 @@ export default UploadScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  inner: { padding: 20, paddingTop: 60 },
-  title: { color: '#fff', fontSize: 22, fontWeight: 'bold', marginBottom: 24 },
+  inner: { padding: wp(5), paddingTop: hp(7.5) },
+  title: { color: '#fff', fontSize: responsiveFontSize(22), fontWeight: 'bold', marginBottom: hp(3) },
   videoPicker: {
-    height: 200, backgroundColor: '#111', borderRadius: 16,
+    height: hp(25), backgroundColor: '#111', borderRadius: wp(4),
     borderWidth: 1, borderColor: '#333', borderStyle: 'dashed',
-    justifyContent: 'center', alignItems: 'center', marginBottom: 20,
+    justifyContent: 'center', alignItems: 'center', marginBottom: hp(2.5),
   },
-  videoPlaceholder: { alignItems: 'center', gap: 8 },
-  videoPlaceholderText: { color: '#888', fontSize: 16, fontWeight: '500' },
-  videoSubText: { color: '#555', fontSize: 13 },
-  videoSelected: { alignItems: 'center', gap: 6 },
-  videoSelectedText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  changeText: { color: '#888', fontSize: 13 },
+  videoPlaceholder: { alignItems: 'center', gap: hp(1) },
+  videoPlaceholderText: { color: '#888', fontSize: responsiveFontSize(16), fontWeight: '500' },
+  videoSubText: { color: '#555', fontSize: responsiveFontSize(13) },
+  videoSelected: { alignItems: 'center', gap: hp(0.75) },
+  videoSelectedText: { color: '#fff', fontSize: responsiveFontSize(16), fontWeight: '600' },
+  changeText: { color: '#888', fontSize: responsiveFontSize(13) },
   captionContainer: {
-    backgroundColor: '#111', borderRadius: 12,
-    borderWidth: 1, borderColor: '#333', padding: 14, marginBottom: 20,
+    backgroundColor: '#111', borderRadius: wp(3),
+    borderWidth: 1, borderColor: '#333', padding: wp(3.5), marginBottom: hp(2.5),
   },
-  captionInput: { color: '#fff', fontSize: 15, minHeight: 80, textAlignVertical: 'top' },
-  charCount: { color: '#555', fontSize: 12, textAlign: 'right', marginTop: 8 },
-  progressContainer: { marginBottom: 16, gap: 8 },
+  captionInput: { color: '#fff', fontSize: responsiveFontSize(15), minHeight: hp(10), textAlignVertical: 'top' },
+  charCount: { color: '#555', fontSize: responsiveFontSize(12), textAlign: 'right', marginTop: hp(1) },
+  progressContainer: { marginBottom: hp(2), gap: hp(1) },
   progressBar: {
-    height: 6, backgroundColor: '#222', borderRadius: 3, overflow: 'hidden',
+    height: hp(0.75), backgroundColor: '#222', borderRadius: wp(1), overflow: 'hidden',
   },
-  progressFill: { height: '100%', backgroundColor: '#E91E8C', borderRadius: 3 },
-  progressText: { color: '#888', fontSize: 13, textAlign: 'center' },
+  progressFill: { height: '100%', backgroundColor: '#E91E8C', borderRadius: wp(1) },
+  progressText: { color: '#888', fontSize: responsiveFontSize(13), textAlign: 'center' },
   uploadBtn: {
-    backgroundColor: '#E91E8C', borderRadius: 14, padding: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#E91E8C', borderRadius: wp(3.5), padding: hp(2),
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: wp(2),
   },
   uploadBtnDisabled: { backgroundColor: '#4a0a2a', opacity: 0.6 },
-  uploadBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  uploadBtnText: { color: '#fff', fontSize: responsiveFontSize(16), fontWeight: 'bold' },
 });

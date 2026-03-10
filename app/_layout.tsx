@@ -3,6 +3,7 @@ import { Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 
 const RootLayoutNav = () => {
@@ -34,6 +35,7 @@ const RootLayoutNav = () => {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="reel-viewer" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="light" />
@@ -43,9 +45,11 @@ const RootLayoutNav = () => {
 }
 
 const RootLayout = () => (
-  <AuthProvider>
-    <RootLayoutNav />
-  </AuthProvider>
+  <SafeAreaProvider>
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  </SafeAreaProvider>
 );
 
 export default RootLayout;
