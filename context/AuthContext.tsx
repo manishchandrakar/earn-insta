@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   User,
   onAuthStateChanged,
@@ -27,49 +27,83 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  accessToken: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  getToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const refreshTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const saveToken = useCallback((token: string) => {
+    setAccessToken(token);
+  }, []);
+
+  const clearToken = useCallback(() => {
+    setAccessToken(null);
+  }, []);
+
+  const getToken = useCallback(async (): Promise<string | null> => {
+    if (!user) return null;
+    // Returns cached token or refreshes if expired
+    const token = await user.getIdToken(false);
+    setAccessToken(token);
+    return token;
+  }, [user]);
+
+  const startTokenRefresh = useCallback((firebaseUser: User) => {
+    if (refreshTimer.current) clearInterval(refreshTimer.current);
+    // Refresh every 55 min — token expires at 60 min
+    refreshTimer.current = setInterval(async () => {
+      const token = await firebaseUser.getIdToken(true);
+      setAccessToken(token);
+    }, 55 * 60 * 1000);
+  }, []);
+
+  const fetchUserProfile = useCallback(async (uid: string) => {
+    try {
+      const docSnap = await getDoc(doc(db, 'users', uid));
+      if (docSnap.exists()) setUserProfile(docSnap.data() as UserProfile);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
+        const token = await firebaseUser.getIdToken();
+        saveToken(token);
+        startTokenRefresh(firebaseUser);
         await fetchUserProfile(firebaseUser.uid);
       } else {
+        clearToken();
+        if (refreshTimer.current) clearInterval(refreshTimer.current);
         setUserProfile(null);
       }
       setLoading(false);
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (refreshTimer.current) clearInterval(refreshTimer.current);
+    };
+  }, [clearToken, fetchUserProfile, saveToken, startTokenRefresh]);
+
+  const login = useCallback(async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email, password);
   }, []);
 
-  const fetchUserProfile = async (uid: string) => {
-    try {
-      const docRef = doc(db, 'users', uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setUserProfile(docSnap.data() as UserProfile);
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
-  };
-
-  const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
-  };
-
-  const signup = async (email: string, username: string, password: string) => {
+  const signup = useCallback(async (email: string, username: string, password: string) => {
     const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(newUser, { displayName: username });
 
@@ -88,22 +122,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     await setDoc(doc(db, 'users', newUser.uid), profile);
     setUserProfile(profile);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await signOut(auth);
+    clearToken();
+    if (refreshTimer.current) clearInterval(refreshTimer.current);
     setUserProfile(null);
-  };
+  }, [clearToken]);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) await fetchUserProfile(user.uid);
-  };
+  }, [user, fetchUserProfile]);
+
+  const value = useMemo(
+    () => ({ user, userProfile, loading, accessToken, login, signup, logout, refreshProfile, getToken }),
+    [user, userProfile, loading, accessToken, login, signup, logout, refreshProfile, getToken]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, login, signup, logout, refreshProfile }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
 export const useAuth = () => useContext(AuthContext);

@@ -14,9 +14,7 @@ interface UserResult {
   followersCount: number;
 }
 
-function Separator() {
-  return <View style={{ height: 0.5, backgroundColor: '#1a1a1a' }} />;
-}
+const Separator = () => <View style={{ height: 0.5, backgroundColor: '#1a1a1a' }} />;
 
 const SUGGESTED = [
   { id: '1', label: 'Trending Creators', icon: 'flame', color: '#FF6B35' },
@@ -24,7 +22,7 @@ const SUGGESTED = [
   { id: '3', label: 'Top Earners', icon: 'trophy', color: '#F1C40F' },
 ];
 
-export default function SearchScreen() {
+const SearchScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [results, setResults] = useState<UserResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -167,7 +165,9 @@ export default function SearchScreen() {
       ) : null}
     </View>
   );
-}
+};
+
+export default SearchScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },

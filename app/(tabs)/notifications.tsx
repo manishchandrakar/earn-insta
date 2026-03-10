@@ -15,7 +15,7 @@ const iconMap: Record<string, { name: any; color: string }> = {
   comment: { name: 'chatbubble', color: '#2196F3' },
 };
 
-export default function NotificationsScreen() {
+const NotificationsScreen = () => {
   const renderItem = ({ item }: { item: typeof DEMO_NOTIFICATIONS[0] }) => {
     const icon = iconMap[item.type] || iconMap.like;
     return (
@@ -42,7 +42,9 @@ export default function NotificationsScreen() {
       />
     </View>
   );
-}
+};
+
+export default NotificationsScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', paddingTop: 60 },

@@ -14,7 +14,7 @@ import {
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
-export default function SignupScreen() {
+const SignupScreen = () => {
   const { signup } = useAuth();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
@@ -123,7 +123,9 @@ export default function SignupScreen() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-}
+};
+
+export default SignupScreen;
 
 const styles = StyleSheet.create({
   container: {

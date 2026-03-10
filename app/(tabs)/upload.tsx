@@ -10,7 +10,7 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
 
-export default function UploadScreen() {
+const UploadScreen = () => {
   const { user, userProfile } = useAuth();
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
@@ -176,7 +176,9 @@ export default function UploadScreen() {
       </TouchableOpacity>
     </ScrollView>
   );
-}
+};
+
+export default UploadScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },

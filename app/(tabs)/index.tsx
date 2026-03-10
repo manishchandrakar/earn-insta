@@ -50,7 +50,7 @@ const DUMMY_REELS: Reel[] = [
   },
 ];
 
-function ReelItem({ item, isActive }: { item: Reel; isActive: boolean }) {
+const ReelItem = ({ item, isActive }: { item: Reel; isActive: boolean }) => {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(item.likesCount);
   const [following, setFollowing] = useState(false);
@@ -141,9 +141,9 @@ function ReelItem({ item, isActive }: { item: Reel; isActive: boolean }) {
       </View>
     </View>
   );
-}
+};
 
-export default function ReelsFeedScreen() {
+const ReelsFeedScreen = () => {
   const [reels, setReels] = useState<Reel[]>(DUMMY_REELS);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -198,7 +198,9 @@ export default function ReelsFeedScreen() {
       />
     </View>
   );
-}
+};
+
+export default ReelsFeedScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },

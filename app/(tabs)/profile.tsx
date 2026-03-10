@@ -20,7 +20,7 @@ interface Reel {
   viewsCount: number;
 }
 
-export default function ProfileScreen() {
+const ProfileScreen = () => {
   const { user, userProfile, logout } = useAuth();
   const [reels, setReels] = useState<Reel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,7 +146,9 @@ export default function ProfileScreen() {
       </View>
     </ScrollView>
   );
-}
+};
+
+export default ProfileScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },

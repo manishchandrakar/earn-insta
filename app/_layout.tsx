@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator } from 'react-native';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 
-function RootLayoutNav() {
+const RootLayoutNav = () => {
   const { user, loading } = useAuth();
   const segments = useSegments();
 
@@ -40,10 +40,10 @@ function RootLayoutNav() {
   );
 }
 
-export default function RootLayout() {
-  return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
-  );
-}
+const RootLayout = () => (
+  <AuthProvider>
+    <RootLayoutNav />
+  </AuthProvider>
+);
+
+export default RootLayout;
