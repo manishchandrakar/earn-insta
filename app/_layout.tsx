@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 
 const RootLayoutNav = () => {
@@ -36,6 +37,7 @@ const RootLayoutNav = () => {
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="light" />
+      <Toast />
     </>
   );
 }

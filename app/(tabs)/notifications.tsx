@@ -1,23 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const DEMO_NOTIFICATIONS = [
-  { id: '1', type: 'like', text: 'earninsta_official liked your reel', time: '2m ago' },
-  { id: '2', type: 'follow', text: 'creator_pro started following you', time: '10m ago' },
-  { id: '3', type: 'comment', text: 'user123 commented: "Amazing video!"', time: '1h ago' },
-  { id: '4', type: 'like', text: '5 people liked your reel', time: '2h ago' },
-];
-
-const iconMap: Record<string, { name: any; color: string }> = {
-  like: { name: 'heart', color: '#E91E8C' },
-  follow: { name: 'person-add', color: '#4CAF50' },
-  comment: { name: 'chatbubble', color: '#2196F3' },
-};
+import { DEMO_NOTIFICATIONS, NOTIFICATION_ICON_MAP, INotification, ENotificationType } from '@/constants/dummyData';
 
 const NotificationsScreen = () => {
-  const renderItem = ({ item }: { item: typeof DEMO_NOTIFICATIONS[0] }) => {
-    const icon = iconMap[item.type] || iconMap.like;
+  const renderItem = ({ item }: { item: INotification }) => {
+    const icon = NOTIFICATION_ICON_MAP[item.type] ?? NOTIFICATION_ICON_MAP[ENotificationType.Like];
     return (
       <View style={styles.notifRow}>
         <View style={[styles.iconContainer, { backgroundColor: icon.color + '22' }]}>

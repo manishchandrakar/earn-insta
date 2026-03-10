@@ -6,25 +6,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-
-interface UserResult {
-  uid: string;
-  username: string;
-  displayName: string;
-  followersCount: number;
-}
+import { SEARCH_CATEGORIES, IUserResult } from '@/constants/dummyData';
+import { getAvatarColor } from '@/utils/formatters';
 
 const Separator = () => <View style={{ height: 0.5, backgroundColor: '#1a1a1a' }} />;
 
-const SUGGESTED = [
-  { id: '1', label: 'Trending Creators', icon: 'flame', color: '#FF6B35' },
-  { id: '2', label: 'New Users', icon: 'sparkles', color: '#9B59B6' },
-  { id: '3', label: 'Top Earners', icon: 'trophy', color: '#F1C40F' },
-];
-
 const SearchScreen = () => {
   const [searchText, setSearchText] = useState('');
-  const [results, setResults] = useState<UserResult[]>([]);
+  const [results, setResults] = useState<IUserResult[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async (text: string) => {
@@ -42,7 +31,7 @@ const SearchScreen = () => {
         limit(20)
       );
       const snapshot = await getDocs(q);
-      const users = snapshot.docs.map((doc) => doc.data()) as UserResult[];
+      const users = snapshot.docs.map((doc) => doc.data()) as IUserResult[];
       setResults(users);
     } catch (err) {
       console.error(err);
@@ -51,13 +40,7 @@ const SearchScreen = () => {
     }
   };
 
-  const getAvatarColor = (name: string) => {
-    const colors = ['#E91E8C', '#9B59B6', '#3498DB', '#E67E22', '#1ABC9C', '#E74C3C'];
-    const index = (name?.codePointAt(0) || 0) % colors.length;
-    return colors[index];
-  };
-
-  const renderUser = ({ item }: { item: UserResult }) => (
+  const renderUser = ({ item }: { item: IUserResult }) => (
     <TouchableOpacity style={styles.userRow} activeOpacity={0.7}>
       {/* Avatar with initial */}
       <View style={[styles.avatar, { backgroundColor: getAvatarColor(item.displayName) }]}>
@@ -119,7 +102,7 @@ const SearchScreen = () => {
       )}
 
       {/* Results */}
-      {results.length > 0 ? (
+      {results.length > 0 && (
         <>
           <Text style={styles.sectionTitle}>Results ({results.length})</Text>
           <FlatList
@@ -130,8 +113,9 @@ const SearchScreen = () => {
             ItemSeparatorComponent={Separator}
           />
         </>
-      ) : searchText.length > 0 && !loading ? (
-        /* No results */
+      )}
+
+      {results.length === 0 && searchText.length > 0 && !loading && (
         <View style={styles.noResults}>
           <View style={styles.noResultsIcon}>
             <Ionicons name="person-outline" size={36} color="#555" />
@@ -139,13 +123,13 @@ const SearchScreen = () => {
           <Text style={styles.noResultsText}>No users found</Text>
           <Text style={styles.noResultsSub}>Try a different username</Text>
         </View>
-      ) : !loading ? (
-        /* Default state */
+      )}
+
+      {results.length === 0 && searchText.length === 0 && !loading && (
         <View style={styles.defaultState}>
-          {/* Discover categories */}
           <Text style={styles.sectionTitle}>Browse</Text>
           <View style={styles.categoryRow}>
-            {SUGGESTED.map((cat) => (
+            {SEARCH_CATEGORIES.map((cat) => (
               <TouchableOpacity key={cat.id} style={styles.categoryCard} activeOpacity={0.8}>
                 <View style={[styles.categoryIcon, { backgroundColor: cat.color + '22' }]}>
                   <Ionicons name={cat.icon as any} size={24} color={cat.color} />
@@ -154,15 +138,13 @@ const SearchScreen = () => {
               </TouchableOpacity>
             ))}
           </View>
-
-          {/* Search hint */}
           <View style={styles.searchHint}>
             <Ionicons name="search-circle" size={64} color="#1a1a1a" />
             <Text style={styles.hintText}>Search by username</Text>
             <Text style={styles.hintSub}>Type at least 2 characters</Text>
           </View>
         </View>
-      ) : null}
+      )}
     </View>
   );
 };

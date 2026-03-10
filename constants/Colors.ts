@@ -24,3 +24,21 @@ export const Colors = {
     tabIconSelected: tintColorDark,
   },
 };
+
+/** App-level flat color palette */
+export const AppColors = {
+  primary: '#E91E8C',
+  secondary: '#9B59B6',
+  success: '#4CAF50',
+  warning: '#FFC107',
+  error: '#F44336',
+  info: '#2196F3',
+  black: '#000000',
+  white: '#FFFFFF',
+  background: '#000000',
+  surface: '#111111',
+  border: '#2a2a2a',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#888888',
+  textMuted: '#555555',
+};

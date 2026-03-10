@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -7,53 +7,24 @@ import {
   TouchableOpacity,
   Text,
   StatusBar,
-  ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { DUMMY_REELS, IReel } from '@/constants/dummyData';
+import { formatCount } from '@/utils/formatters';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-interface Reel {
-  id: string;
-  videoUrl: string;
-  caption: string;
-  username: string;
-  likesCount: number;
-  commentsCount: number;
-  sharesCount: number;
-  userId: string;
-}
-
-const DUMMY_REELS: Reel[] = [
-  {
-    id: '1',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-    caption: 'First reel on EarnInsta! 🎬🔥 #viral #fyp',
-    username: 'earninsta_official',
-    likesCount: 12400,
-    commentsCount: 450,
-    sharesCount: 230,
-    userId: 'demo1',
-  },
-  {
-    id: '2',
-    videoUrl: 'https://www.w3schools.com/html/movie.mp4',
-    caption: 'Watch and earn coins! 💰 #earn #money',
-    username: 'creator_pro',
-    likesCount: 8900,
-    commentsCount: 320,
-    sharesCount: 150,
-    userId: 'demo2',
-  },
-];
-
-const ReelItem = ({ item, isActive }: { item: Reel; isActive: boolean }) => {
+const ReelItem = ({ item, isActive, isScreenFocused }: { item: IReel; isActive: boolean; isScreenFocused: boolean }) => {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(item.likesCount);
   const [following, setFollowing] = useState(false);
+  const [manualPaused, setManualPaused] = useState(false);
+  const [showIcon, setShowIcon] = useState(false);
 
   const player = useVideoPlayer(item.videoUrl, (p) => {
     p.loop = true;
@@ -61,32 +32,37 @@ const ReelItem = ({ item, isActive }: { item: Reel; isActive: boolean }) => {
   });
 
   useEffect(() => {
-    if (isActive) {
+    if (isActive && isScreenFocused && !manualPaused) {
       player.play();
     } else {
       player.pause();
     }
-  }, [isActive]);
+  }, [isActive, isScreenFocused, manualPaused]);
+
+  const handleTap = () => {
+    setManualPaused(prev => !prev);
+    setShowIcon(true);
+    setTimeout(() => setShowIcon(false), 800);
+  };
 
   const handleLike = () => {
     setLiked(!liked);
     setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
-  const formatCount = (count: number) => {
-    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-    return count.toString();
-  };
-
   return (
-    <View style={styles.reelContainer}>
+    <Pressable style={styles.reelContainer} onPress={handleTap}>
       <VideoView
         player={player}
         style={styles.video}
         contentFit="cover"
         nativeControls={false}
       />
+      {showIcon && (
+        <View style={styles.tapIconContainer}>
+          <Ionicons name={manualPaused ? 'pause' : 'play'} size={60} color="rgba(255,255,255,0.85)" />
+        </View>
+      )}
 
       <View style={styles.overlay}>
         {/* Right side actions */}
@@ -139,13 +115,21 @@ const ReelItem = ({ item, isActive }: { item: Reel; isActive: boolean }) => {
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 };
 
 const ReelsFeedScreen = () => {
-  const [reels, setReels] = useState<Reel[]>(DUMMY_REELS);
+  const [reels, setReels] = useState<IReel[]>(DUMMY_REELS);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isScreenFocused, setIsScreenFocused] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsScreenFocused(true);
+      return () => setIsScreenFocused(false);
+    }, [])
+  );
 
   useEffect(() => {
     loadReels();
@@ -169,10 +153,10 @@ const ReelsFeedScreen = () => {
   const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
 
   const renderItem = useCallback(
-    ({ item, index }: { item: Reel; index: number }) => (
-      <ReelItem item={item} isActive={index === activeIndex} />
+    ({ item, index }: { item: IReel; index: number }) => (
+      <ReelItem item={item} isActive={index === activeIndex} isScreenFocused={isScreenFocused} />
     ),
-    [activeIndex]
+    [activeIndex, isScreenFocused]
   );
 
   return (
@@ -258,4 +242,9 @@ const styles = StyleSheet.create({
   },
   musicRow: { flexDirection: 'row', alignItems: 'center' },
   musicText: { color: '#fff', fontSize: 13 },
+  tapIconContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

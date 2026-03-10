@@ -8,11 +8,12 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
+import { formatCount } from '@/utils/formatters';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_SIZE = SCREEN_WIDTH / 3 - 2;
 
-interface Reel {
+interface IReel {
   id: string;
   videoUrl: string;
   caption: string;
@@ -22,7 +23,7 @@ interface Reel {
 
 const ProfileScreen = () => {
   const { user, userProfile, logout } = useAuth();
-  const [reels, setReels] = useState<Reel[]>([]);
+  const [reels, setReels] = useState<IReel[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,7 +38,7 @@ const ProfileScreen = () => {
         orderBy('createdAt', 'desc')
       );
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Reel[];
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as IReel[];
       setReels(data);
     } catch (err) {
       console.error(err);

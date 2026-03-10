@@ -10,7 +10,7 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
-interface UserProfile {
+export interface IUserProfile {
   uid: string;
   email: string;
   username: string;
@@ -23,9 +23,9 @@ interface UserProfile {
   createdAt: any;
 }
 
-interface AuthContextType {
+export interface IAuthContext {
   user: User | null;
-  userProfile: UserProfile | null;
+  userProfile: IUserProfile | null;
   loading: boolean;
   accessToken: string | null;
   login: (email: string, password: string) => Promise<void>;
@@ -35,11 +35,11 @@ interface AuthContextType {
   getToken: () => Promise<string | null>;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const AuthContext = createContext<IAuthContext>({} as IAuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<IUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -54,7 +54,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const getToken = useCallback(async (): Promise<string | null> => {
     if (!user) return null;
-    // Returns cached token or refreshes if expired
     const token = await user.getIdToken(false);
     setAccessToken(token);
     return token;
@@ -62,7 +61,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const startTokenRefresh = useCallback((firebaseUser: User) => {
     if (refreshTimer.current) clearInterval(refreshTimer.current);
-    // Refresh every 55 min — token expires at 60 min
     refreshTimer.current = setInterval(async () => {
       const token = await firebaseUser.getIdToken(true);
       setAccessToken(token);
@@ -72,7 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUserProfile = useCallback(async (uid: string) => {
     try {
       const docSnap = await getDoc(doc(db, 'users', uid));
-      if (docSnap.exists()) setUserProfile(docSnap.data() as UserProfile);
+      if (docSnap.exists()) setUserProfile(docSnap.data() as IUserProfile);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -107,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(newUser, { displayName: username });
 
-    const profile: UserProfile = {
+    const profile: IUserProfile = {
       uid: newUser.uid,
       email,
       username: username.toLowerCase(),
