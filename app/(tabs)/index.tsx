@@ -1,31 +1,27 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  View,
-  FlatList,
-  Dimensions,
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-  StatusBar,
-  Pressable,
+  View, FlatList, Dimensions, StyleSheet,
+  TouchableOpacity, Text, StatusBar, Pressable,
 } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import {
-  collection, query, orderBy, limit, getDocs,
-  addDoc, serverTimestamp, doc, updateDoc, increment,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
-import { DUMMY_REELS, IReel, ENotificationType } from '@/constants/dummyData';
+import { useReels } from '@/hooks/useReels';
+import { useLike } from '@/hooks/useLike';
+import { IReel } from '@/constants/dummyData';
 import { formatCount } from '@/utils/formatters';
 import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const ReelItem = ({ item, isActive, isScreenFocused }: { item: IReel; isActive: boolean; isScreenFocused: boolean }) => {
+// ─── ReelItem ──────────────────────────────────────────────────────
+const ReelItem = React.memo(({
+  item, isActive, isScreenFocused,
+}: { item: IReel; isActive: boolean; isScreenFocused: boolean }) => {
   const { user, userProfile } = useAuth();
+  const { mutate: likeMutate } = useLike();
+
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(item.likesCount);
   const [following, setFollowing] = useState(false);
@@ -38,57 +34,39 @@ const ReelItem = ({ item, isActive, isScreenFocused }: { item: IReel; isActive: 
   });
 
   useEffect(() => {
-    if (isActive && isScreenFocused && !manualPaused) {
-      player.play();
-    } else {
-      player.pause();
-    }
+    if (isActive && isScreenFocused && !manualPaused) player.play();
+    else player.pause();
   }, [isActive, isScreenFocused, manualPaused]);
 
-  const handleTap = () => {
-    setManualPaused(prev => !prev);
+  const handleTap = useCallback(() => {
+    setManualPaused((p) => !p);
     setShowIcon(true);
     setTimeout(() => setShowIcon(false), 800);
-  };
+  }, []);
 
-  const handleLike = async () => {
+  const handleLike = useCallback(() => {
     const newLiked = !liked;
     setLiked(newLiked);
-    setLikesCount((prev) => (newLiked ? prev + 1 : prev - 1));
+    setLikesCount((prev) => newLiked ? prev + 1 : prev - 1);
 
-    if (!user || !item.userId || item.userId === user.uid || item.userId.startsWith('demo')) return;
-
-    try {
-      await updateDoc(doc(db, 'reels', item.id), {
-        likesCount: increment(newLiked ? 1 : -1),
-      });
-
-      if (newLiked) {
-        await addDoc(collection(db, 'notifications'), {
-          type: ENotificationType.Like,
-          text: `${userProfile?.username || user.displayName || 'Someone'} liked your reel`,
-          recipientId: item.userId,
-          senderId: user.uid,
-          senderUsername: userProfile?.username || user.displayName || '',
-          read: false,
-          createdAt: serverTimestamp(),
-        });
-      }
-    } catch (e) {
-      setLiked(!newLiked);
-      setLikesCount((prev) => (newLiked ? prev - 1 : prev + 1));
-      console.error('Like error:', e);
-    }
-  };
+    likeMutate({
+      reelId: item.id,
+      reelUserId: item.userId,
+      liked: newLiked,
+      currentUserId: user?.uid ?? '',
+      currentUsername: userProfile?.username || user?.displayName || 'Someone',
+    }, {
+      onError: () => {
+        setLiked(!newLiked);
+        setLikesCount((prev) => newLiked ? prev - 1 : prev + 1);
+      },
+    });
+  }, [liked, item, user, userProfile, likeMutate]);
 
   return (
     <Pressable style={styles.reelContainer} onPress={handleTap}>
-      <VideoView
-        player={player}
-        style={styles.video}
-        contentFit="cover"
-        nativeControls={false}
-      />
+      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} />
+
       {showIcon && (
         <View style={styles.tapIconContainer}>
           <Ionicons name={manualPaused ? 'pause' : 'play'} size={wp(15)} color="rgba(255,255,255,0.85)" />
@@ -96,7 +74,7 @@ const ReelItem = ({ item, isActive, isScreenFocused }: { item: IReel; isActive: 
       )}
 
       <View style={styles.overlay}>
-        {/* Right side actions */}
+        {/* Right actions */}
         <View style={styles.rightActions}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
@@ -148,10 +126,11 @@ const ReelItem = ({ item, isActive, isScreenFocused }: { item: IReel; isActive: 
       </View>
     </Pressable>
   );
-};
+});
 
+// ─── Feed Screen ───────────────────────────────────────────────────
 const ReelsFeedScreen = () => {
-  const [reels, setReels] = useState<IReel[]>(DUMMY_REELS);
+  const { data: reels = [] } = useReels();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isScreenFocused, setIsScreenFocused] = useState(true);
 
@@ -162,26 +141,9 @@ const ReelsFeedScreen = () => {
     }, [])
   );
 
-  useEffect(() => {
-    loadReels();
-  }, []);
-
-  const loadReels = async () => {
-    try {
-      const q = query(collection(db, 'reels'), orderBy('createdAt', 'desc'), limit(20));
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        const fetched = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as IReel[];
-        setReels([...fetched, ...DUMMY_REELS]);
-      }
-    } catch {}
-  };
-
   const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
     if (viewableItems.length > 0) setActiveIndex(viewableItems[0].index ?? 0);
   }, []);
-
-  const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
 
   const renderItem = useCallback(
     ({ item, index }: { item: IReel; index: number }) => (
@@ -206,10 +168,11 @@ const ReelsFeedScreen = () => {
         snapToAlignment="start"
         decelerationRate="fast"
         onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
+        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         removeClippedSubviews
         initialNumToRender={2}
         maxToRenderPerBatch={3}
+        windowSize={5}
       />
     </View>
   );
@@ -232,10 +195,8 @@ const styles = StyleSheet.create({
   video: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingBottom: hp(11.25),
-    paddingHorizontal: wp(3.5),
+    flexDirection: 'row', alignItems: 'flex-end',
+    paddingBottom: hp(11.25), paddingHorizontal: wp(3.5),
   },
   rightActions: {
     position: 'absolute', right: wp(3), bottom: hp(12.5),
@@ -249,8 +210,7 @@ const styles = StyleSheet.create({
   },
   followPlusBtn: {
     width: wp(5), height: wp(5), borderRadius: wp(2.5),
-    backgroundColor: '#E91E8C',
-    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#E91E8C', justifyContent: 'center', alignItems: 'center',
     marginTop: -hp(1.25),
   },
   actionBtn: { alignItems: 'center', gap: hp(0.375) },
@@ -276,8 +236,6 @@ const styles = StyleSheet.create({
   musicRow: { flexDirection: 'row', alignItems: 'center' },
   musicText: { color: '#fff', fontSize: responsiveFontSize(13) },
   tapIconContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
+    ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center',
   },
 });

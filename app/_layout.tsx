@@ -4,7 +4,17 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const RootLayoutNav = () => {
   const { user, loading } = useAuth();
@@ -45,11 +55,13 @@ const RootLayoutNav = () => {
 }
 
 const RootLayout = () => (
-  <SafeAreaProvider>
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
-  </SafeAreaProvider>
+  <QueryClientProvider client={queryClient}>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </SafeAreaProvider>
+  </QueryClientProvider>
 );
 
 export default RootLayout;
