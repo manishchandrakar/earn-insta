@@ -185,6 +185,27 @@ const ProfileScreen = () => {
           )}
         </View>
 
+        {/* Legal & About */}
+        <View style={styles.legalSection}>
+          <Text style={styles.legalSectionTitle}>LEGAL & ABOUT</Text>
+          {([
+            { icon: 'document-text-outline', label: 'Privacy Policy', route: '/privacy-policy' },
+            { icon: 'alert-circle-outline', label: 'Disclaimer', route: '/disclaimer' },
+            { icon: 'mail-outline', label: 'Contact Us', route: '/contact' },
+          ] as const).map(({ icon, label, route }, i, arr) => (
+            <TouchableOpacity
+              key={route}
+              style={[styles.legalRow, i < arr.length - 1 && styles.legalRowBorder]}
+              onPress={() => router.push(route as any)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name={icon} size={wp(4.5)} color="#888" />
+              <Text style={styles.legalRowText}>{label}</Text>
+              <Ionicons name="chevron-forward" size={wp(4)} color="#333" />
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Account Settings (collapsed) */}
         <View style={styles.settingsSection}>
           <TouchableOpacity style={styles.settingsHeader} onPress={toggleSettings} activeOpacity={0.7}>
@@ -291,6 +312,22 @@ const styles = StyleSheet.create({
   gridLikes: { color: '#fff', fontSize: responsiveFontSize(11) },
   emptyReels: { alignItems: 'center', paddingVertical: hp(6.25), gap: hp(1.5) },
   emptyText: { color: '#888', fontSize: responsiveFontSize(16) },
+  legalSection: {
+    marginHorizontal: wp(5), marginTop: hp(3),
+    borderWidth: 1, borderColor: '#1e1e1e', borderRadius: wp(3), overflow: 'hidden',
+  },
+  legalSectionTitle: {
+    color: '#555', fontSize: responsiveFontSize(11), fontWeight: '700',
+    letterSpacing: 1.2, paddingHorizontal: wp(4), paddingTop: hp(1.75), paddingBottom: hp(1),
+    backgroundColor: '#0d0d0d',
+  },
+  legalRow: {
+    flexDirection: 'row', alignItems: 'center', gap: wp(3),
+    paddingHorizontal: wp(4), paddingVertical: hp(1.75),
+    backgroundColor: '#0a0a0a',
+  },
+  legalRowBorder: { borderBottomWidth: 1, borderBottomColor: '#1a1a1a' },
+  legalRowText: { flex: 1, color: '#ccc', fontSize: responsiveFontSize(14) },
   settingsSection: {
     marginHorizontal: wp(5), marginTop: hp(3), marginBottom: hp(4),
     borderWidth: 1, borderColor: '#1e1e1e', borderRadius: wp(3), overflow: 'hidden',

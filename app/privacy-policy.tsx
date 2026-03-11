@@ -31,7 +31,7 @@ export default function PrivacyPolicyScreen() {
 
         <Text style={styles.heading}>4. Media Access</Text>
         <Text style={styles.body}>
-          The app requests access to your device's media library (photos and videos) only when you choose to upload content. We do not access your media without your explicit action.
+          The app requests access to your device&rsquo;s media library (photos and videos) only when you choose to upload content. We do not access your media without your explicit action.
         </Text>
 
         <Text style={styles.heading}>5. Data Sharing</Text>
@@ -44,7 +44,7 @@ export default function PrivacyPolicyScreen() {
           You may request deletion of your account and associated data at any time by contacting us. Upon request, we will delete your personal information from our systems within 30 days.
         </Text>
 
-        <Text style={styles.heading}>7. Children's Privacy</Text>
+        <Text style={styles.heading}>7. Children&#39;s Privacy</Text>
         <Text style={styles.body}>
           This app is not directed to children under the age of 13. We do not knowingly collect personal information from children under 13.
         </Text>
@@ -52,7 +52,7 @@ export default function PrivacyPolicyScreen() {
         <Text style={styles.heading}>8. Contact Us</Text>
         <Text style={styles.body}>
           If you have any questions about this Privacy Policy, please contact us at:{'\n'}
-          manishchandrakar@example.com
+          amanchanderi1234@gmail.com
         </Text>
       </ScrollView>
     </SafeAreaView>
