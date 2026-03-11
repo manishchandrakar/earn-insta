@@ -32,6 +32,8 @@ const ProfileScreen = () => {
   const [deletePassword, setDeletePassword] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsAnim = useRef(new Animated.Value(0)).current;
+  const [legalOpen, setLegalOpen] = useState(false);
+  const legalAnim = useRef(new Animated.Value(0)).current;
 
   const toggleSettings = () => {
     const toValue = settingsOpen ? 0 : 1;
@@ -39,7 +41,14 @@ const ProfileScreen = () => {
     Animated.timing(settingsAnim, { toValue, duration: 220, useNativeDriver: false }).start();
   };
 
+  const toggleLegal = () => {
+    const toValue = legalOpen ? 0 : 1;
+    setLegalOpen(!legalOpen);
+    Animated.timing(legalAnim, { toValue, duration: 220, useNativeDriver: false }).start();
+  };
+
   const settingsHeight = settingsAnim.interpolate({ inputRange: [0, 1], outputRange: [0, hp(7)] });
+  const legalHeight = legalAnim.interpolate({ inputRange: [0, 1], outputRange: [0, hp(21)] });
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure?', [
@@ -187,23 +196,34 @@ const ProfileScreen = () => {
 
         {/* Legal & About */}
         <View style={styles.legalSection}>
-          <Text style={styles.legalSectionTitle}>LEGAL & ABOUT</Text>
-          {([
-            { icon: 'document-text-outline', label: 'Privacy Policy', route: '/privacy-policy' },
-            { icon: 'alert-circle-outline', label: 'Disclaimer', route: '/disclaimer' },
-            { icon: 'mail-outline', label: 'Contact Us', route: '/contact' },
-          ] as const).map(({ icon, label, route }, i, arr) => (
-            <TouchableOpacity
-              key={route}
-              style={[styles.legalRow, i < arr.length - 1 && styles.legalRowBorder]}
-              onPress={() => router.push(route as any)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name={icon} size={wp(4.5)} color="#888" />
-              <Text style={styles.legalRowText}>{label}</Text>
-              <Ionicons name="chevron-forward" size={wp(4)} color="#333" />
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity style={styles.settingsHeader} onPress={toggleLegal} activeOpacity={0.7}>
+            <View style={styles.settingsHeaderLeft}>
+              <Ionicons name="information-circle-outline" size={wp(4.5)} color="#555" />
+              <Text style={styles.settingsHeaderText}>Legal & About</Text>
+            </View>
+            <Animated.View style={{ transform: [{ rotate: legalAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
+              <Ionicons name="chevron-down" size={wp(4)} color="#555" />
+            </Animated.View>
+          </TouchableOpacity>
+
+          <Animated.View style={{ height: legalHeight, overflow: 'hidden' }}>
+            {([
+              { icon: 'document-text-outline', label: 'Privacy Policy', route: '/privacy-policy' },
+              { icon: 'alert-circle-outline', label: 'Disclaimer', route: '/disclaimer' },
+              { icon: 'mail-outline', label: 'Contact Us', route: '/contact' },
+            ] as const).map(({ icon, label, route }, i, arr) => (
+              <TouchableOpacity
+                key={route}
+                style={[styles.legalRow, i < arr.length - 1 && styles.legalRowBorder]}
+                onPress={() => router.push(route as any)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name={icon} size={wp(4.5)} color="#888" />
+                <Text style={styles.legalRowText}>{label}</Text>
+                <Ionicons name="chevron-forward" size={wp(4)} color="#333" />
+              </TouchableOpacity>
+            ))}
+          </Animated.View>
         </View>
 
         {/* Account Settings (collapsed) */}
