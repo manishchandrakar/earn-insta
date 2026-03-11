@@ -46,6 +46,9 @@ const RootLayoutNav = () => {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="reel-viewer" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="edit-profile" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="followers" options={{ headerShown: true }} />
+        <Stack.Screen name="privacy-policy" options={{ headerShown: true }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="light" />

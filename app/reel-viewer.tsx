@@ -7,17 +7,34 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useUserReels } from '@/hooks/useUserReels';
+import { useLike } from '@/hooks/useLike';
+import { useAuth } from '@/context/AuthContext';
 import { IReel } from '@/constants/dummyData';
 import { formatCount } from '@/utils/formatters';
 import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const ReelViewerItem = React.memo(({ item, isActive }: { item: IReel; isActive: boolean }) => {
+interface ReelItemProps {
+  item: IReel;
+  isActive: boolean;
+  currentUserId: string;
+  currentUsername: string;
+}
+
+const ReelViewerItem = React.memo(({ item, isActive, currentUserId, currentUsername }: ReelItemProps) => {
   const player = useVideoPlayer(item.videoUrl, (p) => {
     p.loop = true;
     p.muted = false;
   });
+
+  const { liked, likeCount, toggle, loading } = useLike(
+    item.id,
+    item.userId,
+    item.likesCount,
+    currentUserId,
+    currentUsername,
+  );
 
   useEffect(() => {
     if (isActive) player.play();
@@ -29,14 +46,23 @@ const ReelViewerItem = React.memo(({ item, isActive }: { item: IReel; isActive: 
       <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} />
       <View style={styles.overlay}>
         <View style={styles.rightActions}>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Ionicons name="heart-outline" size={wp(7.5)} color="#fff" />
-            <Text style={styles.actionText}>{formatCount(item.likesCount)}</Text>
+
+          {/* Like Button */}
+          <TouchableOpacity style={styles.actionBtn} onPress={toggle} disabled={loading} activeOpacity={0.7}>
+            <Ionicons
+              name={liked ? 'heart' : 'heart-outline'}
+              size={wp(7.5)}
+              color={liked ? '#E91E8C' : '#fff'}
+            />
+            <Text style={[styles.actionText, liked && styles.likedText]}>{formatCount(likeCount)}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
+
+          {/* Comment Button (UI only) */}
+          <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7}>
             <Ionicons name="chatbubble-outline" size={wp(7)} color="#fff" />
             <Text style={styles.actionText}>{formatCount(item.commentsCount)}</Text>
           </TouchableOpacity>
+
         </View>
         <View style={styles.bottomInfo}>
           <Text style={styles.username}>@{item.username}</Text>
@@ -49,9 +75,13 @@ const ReelViewerItem = React.memo(({ item, isActive }: { item: IReel; isActive: 
 
 const ReelViewerScreen = () => {
   const { userId, startIndex } = useLocalSearchParams<{ userId: string; startIndex: string }>();
+  const { user, userProfile } = useAuth();
   const { data: reels = [], isLoading } = useUserReels(userId);
   const [activeIndex, setActiveIndex] = useState(Number(startIndex) || 0);
   const flatListRef = useRef<FlatList>(null);
+
+  const currentUserId = user?.uid || '';
+  const currentUsername = userProfile?.username || user?.displayName || '';
 
   useEffect(() => {
     if (reels.length > 0) {
@@ -84,7 +114,12 @@ const ReelViewerScreen = () => {
         ref={flatListRef}
         data={reels}
         renderItem={({ item, index }) => (
-          <ReelViewerItem item={item} isActive={index === activeIndex} />
+          <ReelViewerItem
+            item={item}
+            isActive={index === activeIndex}
+            currentUserId={currentUserId}
+            currentUsername={currentUsername}
+          />
         )}
         keyExtractor={(item) => item.id}
         pagingEnabled
@@ -124,6 +159,7 @@ const styles = StyleSheet.create({
   },
   actionBtn: { alignItems: 'center', gap: hp(0.375) },
   actionText: { color: '#fff', fontSize: responsiveFontSize(12), fontWeight: '600' },
+  likedText: { color: '#E91E8C' },
   bottomInfo: { flex: 1, paddingRight: wp(15), paddingBottom: hp(0.5) },
   username: { color: '#fff', fontSize: responsiveFontSize(15), fontWeight: 'bold', marginBottom: hp(0.5) },
   caption: { color: '#fff', fontSize: responsiveFontSize(14) },

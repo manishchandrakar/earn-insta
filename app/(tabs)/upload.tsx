@@ -9,11 +9,13 @@ import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from '
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from '@/utils/toast';
 import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const UploadScreen = () => {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, refreshProfile } = useAuth();
+  const queryClient = useQueryClient();
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -99,11 +101,14 @@ const UploadScreen = () => {
         reelsCount: increment(1),
       });
 
+      await queryClient.invalidateQueries({ queryKey: ['userReels', user.uid] });
+      await queryClient.invalidateQueries({ queryKey: ['reels'] });
+      await refreshProfile();
       setUploading(false);
       setVideoUri(null);
       setCaption('');
       toast.success('Your reel has been uploaded!', { title: 'Posted!' });
-      setTimeout(() => router.replace('/(tabs)'), 1500);
+      setTimeout(() => router.replace('/(tabs)/profile' as any), 1500);
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.message, { title: 'Upload failed' });

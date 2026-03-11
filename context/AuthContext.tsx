@@ -6,8 +6,11 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   updateProfile,
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export interface IUserProfile {
@@ -33,6 +36,7 @@ export interface IAuthContext {
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   getToken: () => Promise<string | null>;
+  deleteAccount: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<IAuthContext>({} as IAuthContext);
@@ -133,9 +137,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (user) await fetchUserProfile(user.uid);
   }, [user, fetchUserProfile]);
 
+  const deleteAccount = useCallback(async (password: string) => {
+    if (!user?.email) throw new Error('No user logged in.');
+
+    // Re-authenticate first (Firebase requires recent login for deletion)
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+
+    const uid = user.uid;
+
+    // Delete all user's reels from Firestore
+    const reelsSnap = await getDocs(query(collection(db, 'reels'), where('userId', '==', uid)));
+    await Promise.all(reelsSnap.docs.map((d) => deleteDoc(d.ref)));
+
+    // Delete user profile document
+    await deleteDoc(doc(db, 'users', uid));
+
+    // Delete Firebase Auth account
+    await deleteUser(user);
+
+    clearToken();
+    if (refreshTimer.current) clearInterval(refreshTimer.current);
+    setUserProfile(null);
+  }, [user, clearToken]);
+
   const value = useMemo(
-    () => ({ user, userProfile, loading, accessToken, login, signup, logout, refreshProfile, getToken }),
-    [user, userProfile, loading, accessToken, login, signup, logout, refreshProfile, getToken]
+    () => ({ user, userProfile, loading, accessToken, login, signup, logout, refreshProfile, getToken, deleteAccount }),
+    [user, userProfile, loading, accessToken, login, signup, logout, refreshProfile, getToken, deleteAccount]
   );
 
   return (
