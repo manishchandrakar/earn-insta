@@ -123,7 +123,7 @@ const ProfileScreen = () => {
         <View style={styles.avatarSection}>
           <Avatar
             size={wp(22.5)}
-            name={userProfile?.displayName || user?.displayName}
+            name={userProfile?.displayName || (user?.displayName ?? undefined)}
             borderColor="#E91E8C"
             borderWidth={2}
           />
