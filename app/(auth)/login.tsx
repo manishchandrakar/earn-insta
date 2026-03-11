@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import { AppRoutes } from '@/constants/routes';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
@@ -32,7 +33,7 @@ const LoginScreen = () => {
   const onSubmit = async (data: ILoginForm) => {
     try {
       await login(data.email, data.password);
-      router.replace('/(tabs)' as any);
+      router.replace(AppRoutes.TABS);
     } catch (error: any) {
       toast.error(error.message || 'Invalid credentials', { title: 'Login Failed' });
     }
@@ -112,7 +113,7 @@ const LoginScreen = () => {
         {/* Signup link */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/signup' as any)}>
+          <TouchableOpacity onPress={() => router.push(AppRoutes.SIGNUP)}>
             <Text style={styles.signupLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>

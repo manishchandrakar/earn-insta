@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Stack, router, useSegments } from 'expo-router';
+import { AppRoutes } from '@/constants/routes';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -26,9 +27,9 @@ const RootLayoutNav = () => {
     const inAuthGroup = (segments[0] as string) === '(auth)';
 
     if (!user && !inAuthGroup) {
-      router.replace('/(auth)/login' as any);
+      router.replace(AppRoutes.LOGIN);
     } else if (user && inAuthGroup) {
-      router.replace('/(tabs)' as any);
+      router.replace(AppRoutes.TABS);
     }
   }, [user, loading, segments]);
 

@@ -10,6 +10,7 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
+import { AppRoutes } from '@/constants/routes';
 import toast from '@/utils/toast';
 import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
@@ -108,7 +109,7 @@ const UploadScreen = () => {
       setVideoUri(null);
       setCaption('');
       toast.success('Your reel has been uploaded!', { title: 'Posted!' });
-      setTimeout(() => router.replace('/(tabs)/profile' as any), 1500);
+      setTimeout(() => router.replace(AppRoutes.PROFILE), 1500);
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.message, { title: 'Upload failed' });

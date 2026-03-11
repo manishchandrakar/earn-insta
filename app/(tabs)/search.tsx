@@ -92,7 +92,7 @@ const SearchScreen = () => {
             {SEARCH_CATEGORIES.map((cat) => (
               <TouchableOpacity key={cat.id} style={styles.categoryCard} activeOpacity={0.8}>
                 <View style={[styles.categoryIcon, { backgroundColor: cat.color + '22' }]}>
-                  <Ionicons name={cat.icon as any} size={wp(6)} color={cat.color} />
+                  <Ionicons name={cat.icon} size={wp(6)} color={cat.color} />
                 </View>
                 <Text style={styles.categoryLabel}>{cat.label}</Text>
               </TouchableOpacity>

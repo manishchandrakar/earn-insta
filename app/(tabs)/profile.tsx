@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
+import { AppRoutes } from '@/constants/routes';
 import { useUserReels } from '@/hooks/useUserReels';
 import { useNotifications } from '@/hooks/useNotifications';
 import Avatar from '@/components/ui/Avatar';
@@ -58,7 +59,7 @@ const ProfileScreen = () => {
         onPress: () => void (async () => {
           setLoggingOut(true);
           await logout();
-          router.replace('/(auth)/login' as any);
+          router.replace(AppRoutes.LOGIN);
         })(),
       },
     ]);
@@ -84,7 +85,7 @@ const ProfileScreen = () => {
     try {
       await deleteAccount(deletePassword.trim());
       setDeleteModalVisible(false);
-      router.replace('/(auth)/login' as any);
+      router.replace(AppRoutes.LOGIN);
     } catch (err: any) {
       setDeletingAccount(false);
       const msg = err?.code === 'auth/wrong-password' || err?.code === 'auth/invalid-credential'
@@ -100,11 +101,11 @@ const ProfileScreen = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/(tabs)/search' as any)}>
+            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push(AppRoutes.SEARCH)}>
               <Ionicons name="search" size={wp(5.5)} color="#fff" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/(tabs)/notifications' as any)}>
+            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push(AppRoutes.NOTIFICATIONS)}>
               <Ionicons name="notifications-outline" size={wp(5.5)} color="#fff" />
               {unreadCount > 0 && (
                 <View style={styles.badge}>
@@ -139,19 +140,19 @@ const ProfileScreen = () => {
           <StatItem
             value={userProfile?.followersCount || 0}
             label="Followers"
-            onPress={() => router.push({ pathname: '/followers' as any, params: { userId: user?.uid, type: 'followers' } })}
+            onPress={() => router.push({ pathname: AppRoutes.FOLLOWERS, params: { userId: user?.uid, type: 'followers' } })}
           />
           <View style={styles.statDivider} />
           <StatItem
             value={userProfile?.followingCount || 0}
             label="Following"
-            onPress={() => router.push({ pathname: '/followers' as any, params: { userId: user?.uid, type: 'following' } })}
+            onPress={() => router.push({ pathname: AppRoutes.FOLLOWERS, params: { userId: user?.uid, type: 'following' } })}
           />
         </View>
 
         {/* Edit Profile */}
         <View style={{ marginHorizontal: wp(10), marginBottom: hp(2.5) }}>
-          <AppButton label="Edit Profile" onPress={() => router.push('/edit-profile' as any)} variant="outline" />
+          <AppButton label="Edit Profile" onPress={() => router.push(AppRoutes.EDIT_PROFILE)} variant="outline" />
         </View>
 
         {/* Reels Grid */}
@@ -164,7 +165,7 @@ const ProfileScreen = () => {
               <Text style={styles.emptyText}>No reels yet</Text>
               <AppButton
                 label="Upload your first reel"
-                onPress={() => router.push('/(tabs)/upload' as any)}
+                onPress={() => router.push(AppRoutes.UPLOAD)}
                 style={{ marginTop: hp(1), paddingHorizontal: wp(5) }}
               />
             </View>
@@ -178,7 +179,7 @@ const ProfileScreen = () => {
                 <TouchableOpacity
                   style={styles.gridItem}
                   onPress={() => router.push({
-                    pathname: '/reel-viewer' as any,
+                    pathname: AppRoutes.REEL_VIEWER,
                     params: { userId: user?.uid, startIndex: index },
                   })}
                 >
@@ -208,14 +209,14 @@ const ProfileScreen = () => {
 
           <Animated.View style={{ height: legalHeight, overflow: 'hidden' }}>
             {([
-              { icon: 'document-text-outline', label: 'Privacy Policy', route: '/privacy-policy' },
-              { icon: 'alert-circle-outline', label: 'Disclaimer', route: '/disclaimer' },
-              { icon: 'mail-outline', label: 'Contact Us', route: '/contact' },
+              { icon: 'document-text-outline', label: 'Privacy Policy', route: AppRoutes.PRIVACY_POLICY },
+              { icon: 'alert-circle-outline', label: 'Disclaimer', route: AppRoutes.DISCLAIMER },
+              { icon: 'mail-outline', label: 'Contact Us', route: AppRoutes.CONTACT },
             ] as const).map(({ icon, label, route }, i, arr) => (
               <TouchableOpacity
                 key={route}
                 style={[styles.legalRow, i < arr.length - 1 && styles.legalRowBorder]}
-                onPress={() => router.push(route as any)}
+                onPress={() => router.push(route)}
                 activeOpacity={0.7}
               >
                 <Ionicons name={icon} size={wp(4.5)} color="#888" />

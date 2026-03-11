@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { AppRoutes } from '@/constants/routes';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
@@ -33,7 +34,7 @@ const SignupScreen = () => {
   const onSubmit = async (data: ISignupForm) => {
     try {
       await signup(data.email, data.username, data.password);
-      router.replace('/(tabs)' as any);
+      router.replace(AppRoutes.TABS);
     } catch (error: any) {
       toast.error(error.message || 'Something went wrong', { title: 'Signup Failed' });
     }

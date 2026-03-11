@@ -1,3 +1,8 @@
+import { ComponentProps } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+
+export type IoniconName = ComponentProps<typeof Ionicons>['name'];
+
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export enum ENotificationType {
@@ -36,39 +41,14 @@ export interface IUserResult {
 export interface ISearchCategory {
   id: string;
   label: string;
-  icon: string;
+  icon: IoniconName;
   color: string;
 }
 
 export interface IIconConfig {
-  name: any;
+  name: IoniconName;
   color: string;
 }
-
-// ─── Dummy Reels ─────────────────────────────────────────────────────────────
-
-export const DUMMY_REELS: IReel[] = [
-  {
-    id: '1',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-    caption: 'First reel on EarnInsta! 🎬🔥 #viral #fyp',
-    username: 'earninsta_official',
-    likesCount: 12400,
-    commentsCount: 450,
-    sharesCount: 230,
-    userId: 'demo1',
-  },
-  {
-    id: '2',
-    videoUrl: 'https://www.w3schools.com/html/movie.mp4',
-    caption: 'Watch and earn coins! 💰 #earn #money',
-    username: 'creator_pro',
-    likesCount: 8900,
-    commentsCount: 320,
-    sharesCount: 150,
-    userId: 'demo2',
-  },
-];
 
 // ─── Dummy Notifications ─────────────────────────────────────────────────────
 
@@ -82,9 +62,9 @@ export const DEMO_NOTIFICATIONS: INotification[] = [
 // ─── Notification Icon Map ────────────────────────────────────────────────────
 
 export const NOTIFICATION_ICON_MAP: Record<ENotificationType, IIconConfig> = {
-  [ENotificationType.Like]:    { name: 'heart',       color: '#E91E8C' },
-  [ENotificationType.Follow]:  { name: 'person-add',  color: '#4CAF50' },
-  [ENotificationType.Comment]: { name: 'chatbubble',  color: '#2196F3' },
+  [ENotificationType.Like]:    { name: 'heart',      color: '#E91E8C' },
+  [ENotificationType.Follow]:  { name: 'person-add', color: '#4CAF50' },
+  [ENotificationType.Comment]: { name: 'chatbubble', color: '#2196F3' },
 };
 
 // ─── Search Categories ────────────────────────────────────────────────────────

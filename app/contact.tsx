@@ -2,6 +2,7 @@ import { ScrollView, Text, StyleSheet, TouchableOpacity, Linking, Alert, View } 
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import type { IoniconName } from '@/constants/dummyData';
 
 const EMAIL = 'amanchanderi1234@gmail.com';
 
@@ -43,15 +44,15 @@ export default function ContactScreen() {
         {/* Support Topics */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Support Topics</Text>
-          {[
-            { icon: 'person-outline', text: 'Account issues (login, deletion, profile)' },
-            { icon: 'cloud-upload-outline', text: 'Content upload problems' },
-            { icon: 'bug-outline', text: 'Bug reports' },
-            { icon: 'bulb-outline', text: 'Feature requests' },
-            { icon: 'shield-outline', text: 'Privacy & data inquiries' },
-          ].map(({ icon, text }) => (
+          {([
+            { icon: 'person-outline' as IoniconName, text: 'Account issues (login, deletion, profile)' },
+            { icon: 'cloud-upload-outline' as IoniconName, text: 'Content upload problems' },
+            { icon: 'bug-outline' as IoniconName, text: 'Bug reports' },
+            { icon: 'bulb-outline' as IoniconName, text: 'Feature requests' },
+            { icon: 'shield-outline' as IoniconName, text: 'Privacy & data inquiries' },
+          ]).map(({ icon, text }) => (
             <View key={text} style={styles.topicRow}>
-              <Ionicons name={icon as any} size={16} color="#E91E8C" />
+              <Ionicons name={icon} size={16} color="#E91E8C" />
               <Text style={styles.topicText}>{text}</Text>
             </View>
           ))}
