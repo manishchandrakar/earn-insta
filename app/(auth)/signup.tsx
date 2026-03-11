@@ -16,7 +16,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
 import { signupSchema, ISignupForm } from '@/utils/validationUtils';
-import toast from '@/utils/toast';
+import { toast } from '@/utils/toast';
 import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const SignupScreen = () => {
@@ -35,8 +35,8 @@ const SignupScreen = () => {
     try {
       await signup(data.email, data.username, data.password);
       router.replace(AppRoutes.TABS);
-    } catch (error: any) {
-      toast.error(error.message || 'Something went wrong', { title: 'Signup Failed' });
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Something went wrong', { title: 'Signup Failed' });
     }
   };
 

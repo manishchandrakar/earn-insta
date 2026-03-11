@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppRoutes } from '@/constants/routes';
-import toast from '@/utils/toast';
+import { toast } from '@/utils/toast';
 import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const UploadScreen = () => {
@@ -64,7 +64,7 @@ const UploadScreen = () => {
       const response = await fetch(videoUri);
       const blob = await response.blob();
 
-      const responseData: any = await new Promise((resolve, reject) => {
+      const responseData = await new Promise<{ downloadTokens: string; name: string }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
@@ -110,9 +110,9 @@ const UploadScreen = () => {
       setCaption('');
       toast.success('Your reel has been uploaded!', { title: 'Posted!' });
       setTimeout(() => router.replace(AppRoutes.PROFILE), 1500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
-      toast.error(error.message, { title: 'Upload failed' });
+      toast.error(error instanceof Error ? error.message : 'Upload failed', { title: 'Upload failed' });
       setUploading(false);
     }
   };

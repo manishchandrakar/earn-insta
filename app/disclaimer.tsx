@@ -22,7 +22,7 @@ export default function DisclaimerScreen() {
 
         <Text style={styles.heading}>3. No Warranty</Text>
         <Text style={styles.body}>
-          The app is provided "as is" without any warranty of any kind, express or implied. We do not guarantee that the app will be uninterrupted, error-free, or free from harmful components.
+          The app is provided &rdquo;as is&#34; without any warranty of any kind, express or implied. We do not guarantee that the app will be uninterrupted, error-free, or free from harmful components.
         </Text>
 
         <Text style={styles.heading}>4. Limitation of Liability</Text>

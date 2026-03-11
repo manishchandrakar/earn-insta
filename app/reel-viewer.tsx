@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, FlatList, Dimensions, StyleSheet,
-  TouchableOpacity, Text, ActivityIndicator,
+  TouchableOpacity, Text, ActivityIndicator, ViewToken,
 } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,6 +39,7 @@ const ReelViewerItem = React.memo(({ item, isActive, currentUserId, currentUsern
   useEffect(() => {
     if (isActive) player.play();
     else player.pause();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   return (
@@ -72,6 +73,7 @@ const ReelViewerItem = React.memo(({ item, isActive, currentUserId, currentUsern
     </View>
   );
 });
+ReelViewerItem.displayName = 'ReelViewerItem';
 
 const ReelViewerScreen = () => {
   const { userId, startIndex } = useLocalSearchParams<{ userId: string; startIndex: string }>();
@@ -90,9 +92,9 @@ const ReelViewerScreen = () => {
         flatListRef.current?.scrollToIndex({ index, animated: false });
       }, 100);
     }
-  }, [reels]);
+  }, [reels, startIndex]);
 
-  const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
+  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0) setActiveIndex(viewableItems[0].index ?? 0);
   }, []);
 

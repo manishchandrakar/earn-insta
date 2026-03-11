@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, FlatList, Dimensions, StyleSheet,
-  TouchableOpacity, Text, StatusBar, Pressable,
+  TouchableOpacity, Text, StatusBar, Pressable, ViewToken,
 } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,13 +20,17 @@ const ReelItem = React.memo(({
   item, isActive, isScreenFocused,
 }: { item: IReel; isActive: boolean; isScreenFocused: boolean }) => {
   const { user, userProfile } = useAuth();
-  const { mutate: likeMutate } = useLike();
-
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(item.likesCount);
   const [following, setFollowing] = useState(false);
   const [manualPaused, setManualPaused] = useState(false);
   const [showIcon, setShowIcon] = useState(false);
+
+  const { liked, likeCount: likesCount, toggle: handleLikeFn } = useLike(
+    item.id,
+    item.userId,
+    item.likesCount,
+    user?.uid ?? '',
+    userProfile?.username || (user?.displayName ?? 'Someone'),
+  );
 
   const player = useVideoPlayer(item.videoUrl, (p) => {
     p.loop = true;
@@ -36,6 +40,7 @@ const ReelItem = React.memo(({
   useEffect(() => {
     if (isActive && isScreenFocused && !manualPaused) player.play();
     else player.pause();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, isScreenFocused, manualPaused]);
 
   const handleTap = useCallback(() => {
@@ -44,24 +49,7 @@ const ReelItem = React.memo(({
     setTimeout(() => setShowIcon(false), 800);
   }, []);
 
-  const handleLike = useCallback(() => {
-    const newLiked = !liked;
-    setLiked(newLiked);
-    setLikesCount((prev) => newLiked ? prev + 1 : prev - 1);
-
-    likeMutate({
-      reelId: item.id,
-      reelUserId: item.userId,
-      liked: newLiked,
-      currentUserId: user?.uid ?? '',
-      currentUsername: userProfile?.username || user?.displayName || 'Someone',
-    }, {
-      onError: () => {
-        setLiked(!newLiked);
-        setLikesCount((prev) => newLiked ? prev - 1 : prev + 1);
-      },
-    });
-  }, [liked, item, user, userProfile, likeMutate]);
+  const handleLike = useCallback(() => handleLikeFn(), [handleLikeFn]);
 
   return (
     <Pressable style={styles.reelContainer} onPress={handleTap}>
@@ -128,6 +116,8 @@ const ReelItem = React.memo(({
   );
 });
 
+ReelItem.displayName = 'ReelItem';
+
 // ─── Feed Screen ───────────────────────────────────────────────────
 const ReelsFeedScreen = () => {
   const { data: reels = [] } = useReels();
@@ -141,7 +131,7 @@ const ReelsFeedScreen = () => {
     }, [])
   );
 
-  const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
+  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0) setActiveIndex(viewableItems[0].index ?? 0);
   }, []);
 

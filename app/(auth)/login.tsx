@@ -15,7 +15,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
 import { loginSchema, ILoginForm } from '@/utils/validationUtils';
-import toast from '@/utils/toast';
+import { toast } from '@/utils/toast';
 import { wp, hp, responsiveFontSize } from '@/utils/resposive';
 
 const LoginScreen = () => {
@@ -34,8 +34,8 @@ const LoginScreen = () => {
     try {
       await login(data.email, data.password);
       router.replace(AppRoutes.TABS);
-    } catch (error: any) {
-      toast.error(error.message || 'Invalid credentials', { title: 'Login Failed' });
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Invalid credentials', { title: 'Login Failed' });
     }
   };
 
@@ -112,7 +112,7 @@ const LoginScreen = () => {
 
         {/* Signup link */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
+          <Text style={styles.footerText}>Don&rsquo;t have an account? </Text>
           <TouchableOpacity onPress={() => router.push(AppRoutes.SIGNUP)}>
             <Text style={styles.signupLink}>Sign Up</Text>
           </TouchableOpacity>
