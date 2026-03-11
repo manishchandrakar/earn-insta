@@ -13,10 +13,9 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/logo.png",
+        "backgroundColor": "#000000"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.reel.app"
     },
     "web": {
@@ -39,6 +38,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4dfa191f-474a-4b47-b3f8-67475e20ad16"
+      }
+    },
+    "owner": "manishchandrakar"
   }
 }
