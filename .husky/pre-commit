@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+
+echo "🔍 Checking for forbidden TypeScript patterns..."
+
+# Get staged .ts and .tsx files
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' || true)
+
+if [ -n "$STAGED" ]; then
+  # Check for 'as any'
+  AS_ANY=$(echo "$STAGED" | xargs grep -n '\bas any\b' 2>/dev/null || true)
+  if [ -n "$AS_ANY" ]; then
+    echo ""
+    echo "❌ Blocked: 'as any' found in staged files. Use proper types instead."
+    echo ""
+    echo "$AS_ANY"
+    echo ""
+    exit 1
+  fi
+
+  # Check for ': any' (loose type annotation)
+  COLON_ANY=$(echo "$STAGED" | xargs grep -n ':\s*any\b' 2>/dev/null | grep -v '\/\/' || true)
+  if [ -n "$COLON_ANY" ]; then
+    echo ""
+    echo "❌ Blocked: ': any' type annotation found. Use a proper type or 'unknown' instead."
+    echo ""
+    echo "$COLON_ANY"
+    echo ""
+    exit 1
+  fi
+fi
+
+echo "✅ No forbidden patterns found."
+
+echo "🔍 Running ESLint on staged files..."
+npx lint-staged
+
+echo "✅ Pre-commit checks passed."
