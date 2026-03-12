@@ -1,8 +1,10 @@
-name: Build Android APK
+name: Build Production AAB
 
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 env:
@@ -10,7 +12,7 @@ env:
 
 jobs:
   build:
-    name: Build APK
+    name: Build Production AAB
     runs-on: ubuntu-latest
 
     steps:
@@ -38,10 +40,10 @@ jobs:
       - name: Make Gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build Release APK
+      - name: Build Release AAB
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew bundleRelease --no-daemon
         env:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
@@ -52,9 +54,9 @@ jobs:
           EXPO_PUBLIC_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
-      - name: Upload APK Artifact
+      - name: Upload AAB Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: reel-app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
-          retention-days: 7
+          name: reel-app-production-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30

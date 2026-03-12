@@ -30,6 +30,16 @@
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDld9VQDsT0aBDIE-7psXrNfcOPDBaqM-Q",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "earn-insta.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://earn-insta-default-rtdb.firebaseio.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "earn-insta",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "earn-insta.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "536732886634",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:536732886634:web:cc7121304d0de24269cc13",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-7JBJSVR90W"
       }
     }
   },
